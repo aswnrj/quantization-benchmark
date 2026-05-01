@@ -10,5 +10,4 @@ def load_model_and_tokenizer(model_id, dtype, device):
 if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu' 
     model, tokenizer = load_model_and_tokenizer('meta-llama/Llama-3.2-1B', torch.float16, device)
-    print(sum(p.numel() for p in model.parameters()))
-    print(len(tokenizer))
+    print(f"params: {sum(p.numel() for p in model.parameters()):,} vocab: {len(tokenizer):,}")

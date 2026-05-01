@@ -22,6 +22,7 @@ Thumbs.db
 
 # Notebooks
 .ipynb_checkpoints/
+*.ipynb
 
 # Local HF Cache
 hf_cache/
