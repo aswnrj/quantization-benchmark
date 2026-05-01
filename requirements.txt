@@ -4,4 +4,6 @@ hqq>=0.2.2
 datasets>=3.0.0
 matplotlib>=3.8.0
 numpy
+# torch is preinstalled on Colab. Leave unpinned to avoid forced reinstalls
+# Tested with torch 2.5.x on T4.
 torch
