@@ -1,0 +1,7 @@
+transformers>=4.46.0
+accelerate>=0.34.0
+hqq>=0.2.2
+datasets>=3.0.0
+matplotlib>=3.8.0
+numpy
+torch
