@@ -16,5 +16,5 @@ def run_benchmark(sweep_list):
     return metrics
 
 if __name__ == "__main__":
-    sweep_list = [('512', 512), ('1k', 1024), ('2k', 2048), ('4k', 4096), ('8k', 8192), ('16k', 16384), ('32k', 32768)]
+    sweep_list = [('512', 512), ('1k', 1024), ('2k', 2048), ('4k', 4096), ('8k', 8192), ('16k', 16384)]
     metrics = run_benchmark(sweep_list)

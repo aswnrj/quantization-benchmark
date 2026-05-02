@@ -32,8 +32,8 @@ def run_cell(model, tokenizer, seq_len, n_runs=10, n_warmup=3):
     return {
         'prefill_timings_ms': [t*1000 for t in prefill_timings],
         'decode_timings_ms': [t*1000 for t in decode_timings],
-        'prefill_median_timing': prefill_median,
-        'decode_median_timing': decode_median,
+        'prefill_median_timing_ms': prefill_median*1000,
+        'decode_median_timing_ms': decode_median*1000,
         'prefill_tok_per_sec': prefill_toks,
         'decode_tok_per_sec': decode_toks,
         'peak_memory_bytes': peak_memory_bytes,
