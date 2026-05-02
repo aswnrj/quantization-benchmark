@@ -20,8 +20,8 @@ n_layers = model.config.num_hidden_layers
 n_kv_heads = model.config.num_key_value_heads
 head_dim = model.config.head_dim
 seq_len = cache.get_seq_length()
-dtype_size = cache.layers[0].keys.element_size()
-total_bytes_from_eq = 2 * n_layers * n_kv_heads * head_dim * seq_len * dtype_size
+dtype_bytes = cache.layers[0].keys.element_size()
+total_bytes_from_eq = 2 * n_layers * n_kv_heads * head_dim * seq_len * dtype_bytes
 
 assert total_bytes == total_bytes_from_eq       # 524,288
 print(f"From tensors: {total_bytes:,}bytes, From equation: {total_bytes_from_eq:,}bytes")
