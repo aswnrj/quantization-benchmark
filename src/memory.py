@@ -18,10 +18,10 @@ if __name__ == "__main__":
         raise SystemExit(0)
     device = 'cuda'
     model, tokenizer = model_loader.load_model_and_tokenizer('meta-llama/Llama-3.2-1B', torch.float16, device)
-    reset_peak_memory()
     
     prompt = "The Llama 3 model architecture differs from earlier transformers in several ways:"
     input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
+    reset_peak_memory()
     with torch.inference_mode():
         output = model(input_ids)
     print(f"Peak memory bytes: {peak_memory_bytes()/(1024**3):.2f}GiB")
