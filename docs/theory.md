@@ -22,3 +22,40 @@
 1. Grouped Query Attention (GQA) is a middle ground. `n_kv_heads` number of K heads and V heads are shared among `n_heads` query heads and each K and V head is broadcasted to all the Q heads of that group. 
 1. This was created because the long-context inference in MHA made KV cache memory dominant. KV cache size was earlier `2 * batch_size * n_layers * n_heads * head_dim * seq_len * dtype_bytes`. By using GQA, we can reduce it by a factor of `n_heads / n_kv_heads`.
 1. For Llama3.2-1B model, the `n_heads` is 32. The `n_kv_heads` is 8 which makes it 4x more efficient than using MHA and the quality of the model is comparable. We use `n_kv_heads` in the cache size calculation formula now, instead of `n_heads` earlier. 
+
+## KV Cache Memory Formula 
+
+$$ 2 * n\_layers * n\_kv\_heads * head\_dim * seq\_len * batch\_size * dtype\_bytes  $$
+
+- 2 signifies key and value tensors. Separate memory for both
+- `n_layers`: Each transformer layer has its own set of K and V tensors
+- `n_kv_heads`: This is 8 for Llama3.2-1B due to GQA, even though there are 32 Q heads per layer
+- `head_dim`: The number of dimensions in each head
+- `seq_len`: This grows as the context grows
+- `batch_size`: We will assume it to be 1 here
+- `dtype_bytes`: FP16 = 2, INT8 = 1, INT4 = 0.5
+
+### Per-token cost for Llama3.2-1B (FP16)
+$$ 2 * 16 * 8 * 64 * seq\_len * 1 * 2 = 32,768 * seq\_len$$
+Size of KV cache per token is $32,768$ bytes
+
+### Cache size across context lengths
+
+| Context length | Size |
+| -------------- | ---- |
+| 1K | 32MiB |
+| 4K | 128MiB |
+| 16K | 512MiB |
+| 64K | 2GiB |
+| 128K | 4GiB |
+
+### When does cache dominate weights?
+The total size of weights for this model is $2.47GB$. A context size of $75K$ is enough to occupy that much, post which the cache size dominates the overall size of the model.
+
+### Quantization preview
+| Scheme | dtype_bytes | Cache size at 128K |
+| ------ | ------------ | ------------------ |
+| FP16 | 2 | 4GiB |
+| INT8 | 1 | 2GiB |
+| INT4 | 0.5 | 1GiB |
+ 
