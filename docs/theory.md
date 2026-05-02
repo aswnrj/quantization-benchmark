@@ -25,7 +25,7 @@
 
 ## KV Cache Memory Formula 
 
-$$ 2 * n\_layers * n\_kv\_heads * head\_dim * seq\_len * batch\_size * dtype\_bytes  $$
+$$ 2 * n\\_layers * n\\_kv\\_heads * head\\_dim * seq\\_len * batch\\_size * dtype\\_bytes  $$
 
 - 2 signifies key and value tensors. Separate memory for both
 - `n_layers`: Each transformer layer has its own set of K and V tensors
@@ -36,7 +36,8 @@ $$ 2 * n\_layers * n\_kv\_heads * head\_dim * seq\_len * batch\_size * dtype\_by
 - `dtype_bytes`: FP16 = 2, INT8 = 1, INT4 = 0.5
 
 ### Per-token cost for Llama3.2-1B (FP16)
-$$ 2 * 16 * 8 * 64 * seq\_len * 1 * 2 = 32,768 * seq\_len$$
+$$  2 * 16 * 8 * 64 * seq\\_len * 1 * 2 = 32,768 * seq\\_len $$
+
 Size of KV cache per token is $32,768$ bytes
 
 ### Cache size across context lengths
