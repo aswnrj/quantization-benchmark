@@ -3,7 +3,7 @@ import time
 import statistics
 from src import model_loader
 
-def time_callable(fn, n_runs=5, n_warmup=2):
+def time_callable(fn, n_runs=15, n_warmup=5):
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA GPU required for time measurement")
     for _ in range(n_warmup):
@@ -20,10 +20,10 @@ def time_callable(fn, n_runs=5, n_warmup=2):
         timings.append(end - start)
     return timings, statistics.median(timings)
 
-def time_prefill(model, input_ids, n_runs=5, n_warmup=2):
+def time_prefill(model, input_ids, n_runs=15, n_warmup=5):
     return time_callable(lambda: model(input_ids, use_cache=True), n_runs, n_warmup)
 
-def time_decode_step(model, cache, last_token, n_runs=5, n_warmup=2):
+def time_decode_step(model, cache, last_token, n_runs=15, n_warmup=5):
     # As we call this multiple times (n_runs + n_warmup), the cache side keeps increasing and timings might be slightly inaccurate due to this
     # But if seq_len is 100s to 1000s, the diff should be negligible
     return time_callable(lambda: model(last_token, past_key_values=cache, use_cache=True), n_runs, n_warmup)
