@@ -3,7 +3,7 @@ import time
 import statistics
 from src import model_loader
 
-def time_callable(fn, n_runs=15, n_warmup=5):
+def time_callable(fn, n_runs=10, n_warmup=3):
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA GPU required for time measurement")
     for _ in range(n_warmup):
@@ -20,10 +20,10 @@ def time_callable(fn, n_runs=15, n_warmup=5):
         timings.append(end - start)
     return timings, statistics.median(timings)
 
-def time_prefill(model, input_ids, n_runs=15, n_warmup=5):
-    return time_callable(lambda: model(input_ids, use_cache=True), n_runs, n_warmup)
+def time_prefill(model, input_ids, n_runs=10, n_warmup=3):
+    return time_callable(lambda: model(input_ids, use_cache=True, logits_to_keep=1), n_runs, n_warmup)
 
-def time_decode_step(model, cache, last_token, n_runs=15, n_warmup=5):
+def time_decode_step(model, cache, last_token, n_runs=10, n_warmup=3):
     # As we call this multiple times (n_runs + n_warmup), the cache side keeps increasing and timings might be slightly inaccurate due to this
     # But if seq_len is 100s to 1000s, the diff should be negligible
     return time_callable(lambda: model(last_token, past_key_values=cache, use_cache=True), n_runs, n_warmup)
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
 
     with torch.inference_mode():
-        output = model(input_ids, use_cache=True)
+        output = model(input_ids, use_cache=True, logits_to_keep=1)
 
     cache = output.past_key_values
     last_token = output.logits[:, -1, :].argmax(dim=-1, keepdim=True)
