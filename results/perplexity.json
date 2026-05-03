@@ -1,0 +1,38 @@
+{
+    "meta": {
+        "dataset": "wikitext",
+        "split": "test",
+        "max_length": 2048,
+        "stride": 512,
+        "model_name": "meta-llama/Llama-3.2-1B",
+        "model_dtype": "torch.float16"
+    },
+    "results": {
+        "fp16": {
+            "perplexity": 8.5915815547351,
+            "n_tokens_scored": 288375,
+            "n_windows": 562,
+            "cache_config": {}
+        },
+        "int8": {
+            "perplexity": 8.594285687415374,
+            "n_tokens_scored": 288375,
+            "n_windows": 562,
+            "cache_config": {
+                "nbits": 8,
+                "q_group_size": 64,
+                "residual_length": 64
+            }
+        },
+        "int4": {
+            "perplexity": 9.04308982247364,
+            "n_tokens_scored": 288375,
+            "n_windows": 562,
+            "cache_config": {
+                "nbits": 4,
+                "q_group_size": 64,
+                "residual_length": 64
+            }
+        }
+    }
+}
