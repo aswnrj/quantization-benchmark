@@ -20,8 +20,8 @@ def time_callable(fn, n_runs=10, n_warmup=3):
         timings.append(end - start)
     return timings, statistics.median(timings)
 
-def time_prefill(model, input_ids, n_runs=10, n_warmup=3):
-    return time_callable(lambda: model(input_ids, use_cache=True, logits_to_keep=1), n_runs, n_warmup)
+def time_prefill(model, input_ids, cache_factory=None, n_runs=10, n_warmup=3):
+    return time_callable(lambda: model(input_ids, past_key_values=(cache_factory() if cache_factory else None), use_cache=True, logits_to_keep=1), n_runs, n_warmup)
 
 def time_decode_step(model, cache, last_token, n_runs=10, n_warmup=3):
     # As we call this multiple times (n_runs + n_warmup), the cache side keeps increasing and timings might be slightly inaccurate due to this
