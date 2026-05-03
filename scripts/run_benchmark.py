@@ -34,6 +34,23 @@ def run_benchmark(sweep_list, quantized=None):
             'axis_value': 0,
         })
         output_path = 'results/benchmark_int8.json'
+    elif quantized == 'int4':
+        nbits, q_group_size, residual_length = 4, 64, 64
+        cache_factory = lambda: QuantizedCache(
+                            backend='hqq', config=model.config,
+                            nbits=nbits, axis_key=0, axis_value=0,
+                            q_group_size=q_group_size, residual_length=residual_length
+                        )
+        meta.update({
+            'cache_type': 'int4',
+            'backend': 'hqq',
+            'nbits': nbits,
+            'q_group_size': q_group_size,
+            'residual_length': residual_length,
+            'axis_key': 0,
+            'axis_value': 0,
+        })
+        output_path = 'results/benchmark_int4.json'
 
     results = {}
     for name, seq_len in sweep_list:
@@ -45,4 +62,4 @@ def run_benchmark(sweep_list, quantized=None):
 
 if __name__ == "__main__":
     sweep_list = [('512', 512), ('1k', 1024), ('2k', 2048), ('4k', 4096), ('8k', 8192), ('16k', 16384)]
-    results = run_benchmark(sweep_list, 'int8')
+    results = run_benchmark(sweep_list, 'int4')
