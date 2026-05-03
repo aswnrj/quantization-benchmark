@@ -52,11 +52,56 @@ Size of KV cache per token is $32,768$ bytes
 
 ### When does cache dominate weights?
 The total size of weights for this model is $2.47GB$. A context size of $75K$ is enough to occupy that much, post which the cache size dominates the overall size of the model.
-
-### Quantization preview
-| Scheme | dtype_bytes | Cache size at 128K |
-| ------ | ------------ | ------------------ |
-| FP16 | 2 | 4GiB |
-| INT8 | 1 | 2GiB |
-| INT4 | 0.5 | 1GiB |
  
+
+## Quantization
+
+### Why quantize the KV cache?
+For models with long contexts, KV cache keeps growing and after a point (75k tokens in Llama3.2-1B), it grows larger than the model weights. This is why quantization is required. 
+
+### Affine quantization
+Float range: $[x_{min}, x_{max}]$
+Int range: $[q_{min}, q_{max}]$
+$$q = \text{round}(x / s + z), \quad x_{\text{deq}} = s \cdot (q - z)$$
+$$s = \frac{x_{\max} - x_{\min}}{q_{\max} - q_{\min}}, \quad z = \text{round}\Big(q_{\min} - \frac{x_{\min}}{s}\Big)$$
+$z$: the integer that maps to float 0
+
+### Symmetric vs Asymmetric
+- Symmetric fixes zero point `z=0`
+- Good for data centered around origin (post-RMSNorm + linear, KV cache is roughly centered around origin)
+- Can waste range if data is not centered (eg. ReLU)
+- Asymmetric shifts the quantized range to match distribution
+- Better accuracy for skewed data
+- Slightly more complex, needs zero-point adjustments
+
+### Bit width
+| Scheme | levels |	step size (relative) |	error variance (relative) |
+| -----| ----- | ----- | ----- |
+| FP16 |	~65k|	—	|~0|
+| INT8 |	256	|1×	|1×|
+| INT4 | 16	|16×|	256×|
+
+INT4 will have 256 times more error variance as INT8 as the error variance scales as $s^2$
+
+### Granularity
+- The granularity can be per-tensor, per-channel, per-token and per-group ranging from worst to best quality.
+- Per-token is the natural fit for KV cache (each token's K/V is computed once when generated)
+- The tradeoff: finer granularity = better quality, more metadata.
+- The mechanism: finer granularity -> smaller per-group range -> smaller s-> smaller error
+- HQQ uses per group for INT4 with group size of 64
+
+### Effective bytes per element
+- We usually ignore the metadata (s and z) when we talk about bytes per element. This makes it look like INT4 gives 4x improvement as FP16.
+- But in reality, due to metadata, INT4 with group size of 64 is only 3.56x more efficient than FP16.
+- `bytes/elem = raw + metadata_bytes / group_size`
+- If we consider s and z are fp16 and occupy 2 bytes each and we need 1s and 1z per 64 values: INT4 will need $0.5 + 4/64 = 0.5625$ bytes per value, which is a 3.56x improvement from fp16 which needs 2 bytes.
+
+### Quantization error
+$$\text{Var}(\epsilon) = s^2/12$$
+Rounding to nearest integer with step size s produces noise on `[-s/2, +s/2]`
+Hence, finer granularity helps. 
+
+### Why KV cache is harder than weights
+- Weights are static, but KV cache keeps changing with each token
+- K has outliers, but V is fine. Hence we have methods like KIVI which quantize K per channel and V per token
+- Attention is sensitive to small changes. Near-tie scores can flip when there are small errors in K. 
